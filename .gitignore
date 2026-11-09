@@ -1,10 +1,7 @@
 .DS_Store
-bin
-hex
-lst
 *.bin
-*.lst
 *.o
 *.sym
 *.lis
 *.map
+build/tmp/

@@ -1,7 +1,7 @@
-; entry.asm - Entry Point (BeanZee target, combined firmware)
+; entry.asm - Entry Point (BeanZee target)
 ;
 ; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
-; combined Marvin + BBC BASIC firmware.
+; firmware, with or without BBC BASIC (INCLUDE_BASIC).
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
@@ -19,7 +19,11 @@
     EXTERN usb_putchar          ; um245r.asm - USB write character
     EXTERN usb_puts             ; um245r.asm - USB print string
     EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
+IFDEF INCLUDE_BASIC
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
+ELSE
+    PUBLIC START                ; stub below - no BBC BASIC in this build
+ENDIF
 ;
     EXTERN STACK
 ;
@@ -83,6 +87,12 @@ ALIGN 0x0040
     jp _stub             ; 0x0088 - ra8875_console_cursor_show (not available on beanzee)
 _stub:
     ret
+;
+IFNDEF INCLUDE_BASIC
+; START stub - no BBC BASIC in this build
+START:
+    jp marvin_warmstart
+ENDIF
 ;
 ;
 ; ---- Boot Selection ----

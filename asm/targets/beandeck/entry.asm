@@ -1,7 +1,7 @@
-; entry.asm - Entry Point (BeanDeck target, combined firmware)
+; entry.asm - Entry Point (BeanDeck target)
 ;
 ; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
-; combined Marvin + BBC BASIC firmware.
+; firmware, with or without BBC BASIC (INCLUDE_BASIC).
 ;
 ; BeanDeck: USB console output, keyboard or USB input.
 ;   Reset → keyboard input
@@ -38,7 +38,11 @@
     EXTERN ra8875_console_set_background_colour ; console.asm - set background colour
     EXTERN ra8875_console_cursor_hide ; console.asm - hide software cursor
     EXTERN ra8875_console_cursor_show ; console.asm - show software cursor
+IFDEF INCLUDE_BASIC
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
+ELSE
+    PUBLIC START                ; stub below - no BBC BASIC in this build
+ENDIF
 ;
     EXTERN STACK
     EXTERN CAPS_LOCK_STATE
@@ -104,6 +108,12 @@ ALIGN 0x0040
 _stub:
     ret
 ;
+IFNDEF INCLUDE_BASIC
+; START stub - no BBC BASIC in this build
+START:
+    jp marvin_warmstart
+ENDIF
+;
 ;
 ; ---- Boot Selection ----
 ;
@@ -112,7 +122,11 @@ _stub:
 ;   No key → keyboard input
 ;
 _boot:
+IFDEF INCLUDE_BASIC
     ld bc,0x0D00                ; power-up debounce delay (~12ms at 10MHz)
+ELSE
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+ENDIF
 _boot_powerup:
     nop
     dec bc
@@ -121,6 +135,7 @@ _boot_powerup:
     jr nz,_boot_powerup
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
+IFDEF INCLUDE_BASIC
     ld b,3                      ; up to 3 init attempts
 _boot_ra8875_init:
     call ra8875_initialise      ; ra8875_initialise preserves BC
@@ -128,9 +143,20 @@ _boot_ra8875_init:
     djnz _boot_ra8875_init      ; failed: retry (each attempt re-asserts RESET)
     jr _boot_ra8875_failed      ; all attempts failed: fall back to USB console
 _boot_ra8875_ok:
+ELSE
+    call ra8875_initialise
+    ld bc,0x8000                ; post-init settling delay (~100ms at 10MHz)
+_boot_settle:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_settle
+ENDIF
     call ra8875_console_init
     call console_select
     jp marvin_coldstart
+IFDEF INCLUDE_BASIC
 _boot_ra8875_failed:
     ; RA8875 initialisation failed (no SPI response or memory-clear timeout).
     ; Fall back to USB console so the monitor is at least reachable.
@@ -156,4 +182,5 @@ _boot_ra8875_failed:
     ld a,CONSOLE_STATUS_USB
     ld (CONSOLE_STATUS),a
     jp marvin_coldstart
+ENDIF
 ;
