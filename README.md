@@ -27,15 +27,22 @@ Clone repo with submodules:
 git clone --recurse-submodules https://github.com/PainfulDiodes/marvin.git
 ```
 
-The build script assembles all submodule sources directly — you do not need to build the submodules separately:
+The build scripts assemble all submodule sources directly — you do not need to build the submodules separately. Run them from the repo root. To build everything:
 
 ```bash
-./build.sh
+./build-all.sh
 ```
 
-Output binaries are placed in `build/<target>/`.
+To build one firmware image, name its `.lst` file:
 
-For each target there is full "marvin" output which includes the BASIC interpreter, and in addition a "marvin_minimal" output which contains only the monitor program.
+```bash
+./build.sh beanzee
+./build.sh beanzee_minimal
+```
+
+Output binaries are placed in `build/`.
+
+For each target there is a `<target>` output which includes the BASIC interpreter, and in addition a `<target>_minimal` output which contains only the monitor program.
 
 ## Memory Map
 
