@@ -1,0 +1,9 @@
+; BBC BASIC: the feature flag, RAM address, core modules and Marvin's HOOK layer, in link order
+-DINCLUDE_BASIC
+-DDATA_ORG=0x8000
+BBCZ80-repo/src/EXEC.asm
+BBCZ80-repo/src/EVAL.asm
+BBCZ80-repo/src/ASMB.asm
+BBCZ80-repo/src/MATH.asm
+BBCZ80-repo/src/DATA.asm
+asm/BBCZ80/HOOK.asm

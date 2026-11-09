@@ -1,3 +1,6 @@
+IFNDEF _BDFS_INC
+DEFINE _BDFS_INC
+
 ; bdfs.inc - BeanDeck File System constants
 ;
 ; Included by bdfs.asm (pure data layer) and monitor_bdfs.asm (monitor presentation layer).
@@ -50,3 +53,5 @@ BDFS_ERR_FILE_NOT_FOUND EQU 11
 BDFS_ERR_FILE_TOO_LARGE EQU 12
 BDFS_ERR_FILE_EXISTS    EQU 13
 BDFS_ERR_EMPTY_FILE     EQU 14
+
+ENDIF

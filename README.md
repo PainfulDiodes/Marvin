@@ -26,10 +26,17 @@ Clone repo with submodules:
 git clone --recurse-submodules https://github.com/PainfulDiodes/marvin.git
 ```
 
-The build script assembles all submodule sources directly — you do not need to build the submodules separately:
+The build scripts assemble all submodule sources directly — you do not need to build the submodules separately. Run them from the repo root. To build everything:
 
 ```bash
-./build.sh
+./build-all.sh
+```
+
+To build one firmware image, name its `.lst` file:
+
+```bash
+./build.sh beanzee
+./build.sh beanzee_minimal
 ```
 
 Output binaries are placed in `build/`.
