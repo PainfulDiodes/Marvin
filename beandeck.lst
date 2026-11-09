@@ -1,0 +1,7 @@
+; BeanDeck (BeanBoardSPI Rev B) with BBC BASIC
+asm/targets/beandeck/marvin.asm
+ra8875-z80-repo/asm/ra8875.asm
+ra8875-z80-repo/asm/console.asm
+BBCZ80-repo/src/MAIN.asm
+@basic.lst
+asm/targets/beandeck/mos.asm

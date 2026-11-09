@@ -1,7 +1,7 @@
-; entry.asm - Entry Point (BeanBoard target, combined firmware)
+; entry.asm - Entry Point (BeanBoard target)
 ;
 ; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
-; combined Marvin + BBC BASIC firmware.
+; firmware, with or without BBC BASIC (INCLUDE_BASIC).
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
@@ -31,7 +31,11 @@
     EXTERN key_modifiers        ; keymatrix.asm - read modifier keys
     EXTERN lcd_puts             ; hd44780.asm - LCD print string
 
+IFDEF INCLUDE_BASIC
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
+ELSE
+    PUBLIC START                ; stub below - no BBC BASIC in this build
+ENDIF
 ;
 ;
 ;
@@ -113,6 +117,12 @@ ALIGN 0x0040
     jp hex_byte_val      ; 0x00D3 - parse hex byte (in: HL=str out: A=byte HL=advanced)
 _stub:
     ret
+;
+IFNDEF INCLUDE_BASIC
+; START stub - no BBC BASIC in this build
+START:
+    jp marvin_warmstart
+ENDIF
 ;
 ;
 ; ---- Boot Selection ----

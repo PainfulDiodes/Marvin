@@ -1,12 +1,8 @@
 .DS_Store
-bin
-hex
-lst
 *.bin
-*.lst
 *.o
 *.sym
 *.lis
 *.map
 asm/core/version.inc
-build/*/tmp/
+build/tmp/

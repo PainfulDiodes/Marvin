@@ -1,0 +1,4 @@
+; BeanDeck (BeanBoardSPI Rev B) monitor only
+asm/targets/beandeck/marvin.asm
+ra8875-z80-repo/asm/ra8875.asm
+ra8875-z80-repo/asm/console.asm
