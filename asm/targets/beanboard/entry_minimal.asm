@@ -1,4 +1,4 @@
-; entry_beanboard_minimal.asm - Minimal Marvin Entry Point (BeanBoard target)
+; entry_minimal.asm - Minimal Marvin Entry Point (BeanBoard target)
 ;
 ; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
 ; Initialises LCD and console, then boots to the monitor prompt.

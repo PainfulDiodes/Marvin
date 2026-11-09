@@ -8,4 +8,4 @@ lst
 *.sym
 *.lis
 *.map
-asm/version.inc
+asm/core/version.inc

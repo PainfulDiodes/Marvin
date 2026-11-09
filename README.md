@@ -33,7 +33,7 @@ The build script assembles all submodule sources directly — you do not need to
 ./build.sh
 ```
 
-Output binaries are placed in `targets/<target>/output/`.
+Output binaries are placed in `build/<target>/`.
 
 For each target there is full "marvin" output which includes the BASIC interpreter, and in addition a "marvin_minimal" output which contains only the monitor program.
 

@@ -1,4 +1,4 @@
-; entry_beanboard.asm - Entry Point (BeanBoard target, combined firmware)
+; entry.asm - Entry Point (BeanBoard target, combined firmware)
 ;
 ; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
 ; combined Marvin + BBC BASIC firmware.

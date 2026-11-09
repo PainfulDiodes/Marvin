@@ -7,7 +7,7 @@
 WELCOME_MSG:
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                INCLUDE "asm/version.inc"
+                INCLUDE "asm/core/version.inc"
                 db "\n",0
 
 
