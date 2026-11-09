@@ -9,3 +9,4 @@ lst
 *.lis
 *.map
 asm/core/version.inc
+build/*/tmp/
