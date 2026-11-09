@@ -27,42 +27,47 @@ MINIMAL_NAME="marvin_minimal"
 
 BASIC_MODULES="EXEC EVAL ASMB MATH DATA"
 
+# Object file name for a module path: keeps names unique across folders
+obj_name() {
+    echo "${1//\//_}"
+}
+
 # ---- Per-target module lists ----
 # Used by both combined and minimal builds.
-# Non-RA8875 module paths are relative to $MARVIN_ASM; drivers use drivers/ prefix.
+# Non-RA8875 module paths are relative to $MARVIN_ASM.
 
 modules_for_target() {
     case $1 in
         beanzee)
-            COMBINED_ENTRY="entry_beanzee"
-            MARVIN_MODULES="system console_beanzee drivers/um245r monitor hex messages"
+            COMBINED_ENTRY="targets/beanzee/entry"
+            MARVIN_MODULES="core/system targets/beanzee/console drivers/um245r core/monitor core/hex core/messages"
             RA8875_MODULES=""
             LCD_MODULES=""
             BASIC_MAIN="MAIN"
-            MINIMAL_ENTRY="entry_beanzee_minimal"
-            MINIMAL_MODULES="system console_beanzee drivers/um245r monitor hex messages"
+            MINIMAL_ENTRY="targets/beanzee/entry_minimal"
+            MINIMAL_MODULES="core/system targets/beanzee/console drivers/um245r core/monitor core/hex core/messages"
             MINIMAL_RA8875_MODULES=""
             MINIMAL_LCD_MODULES=""
             ;;
         beanboard)
-            COMBINED_ENTRY="entry_beanboard"
-            MARVIN_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
+            COMBINED_ENTRY="targets/beanboard/entry"
+            MARVIN_MODULES="core/system targets/beanboard/console core/console_select drivers/um245r drivers/hd44780 drivers/keymatrix core/monitor core/hex targets/beanboard/messages"
             RA8875_MODULES=""
             LCD_MODULES="1"
             BASIC_MAIN="MAIN_SM_DSP"
-            MINIMAL_ENTRY="entry_beanboard_minimal"
-            MINIMAL_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
+            MINIMAL_ENTRY="targets/beanboard/entry_minimal"
+            MINIMAL_MODULES="core/system targets/beanboard/console core/console_select drivers/um245r drivers/hd44780 drivers/keymatrix core/monitor core/hex targets/beanboard/messages"
             MINIMAL_RA8875_MODULES=""
             MINIMAL_LCD_MODULES="1"
             ;;
         beandeck)
-            COMBINED_ENTRY="entry_beandeck"
-            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix monitor hex messages"
+            COMBINED_ENTRY="targets/beandeck/entry"
+            MARVIN_MODULES="core/system targets/beandeck/console core/console_select drivers/um245r drivers/keymatrix core/monitor core/hex core/messages"
             RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             LCD_MODULES=""
             BASIC_MAIN="MAIN"
-            MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix monitor hex messages"
+            MINIMAL_ENTRY="targets/beandeck/entry_minimal"
+            MINIMAL_MODULES="core/system targets/beandeck/console core/console_select drivers/um245r drivers/keymatrix core/monitor core/hex core/messages"
             MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             MINIMAL_LCD_MODULES=""
             ;;
@@ -78,8 +83,8 @@ modules_for_target() {
 
 build_target() {
     local target=$1
-    local TARGET_DIR="$REPO_DIR/targets/$target"
-    local OUTDIR="$TARGET_DIR/output"
+    local OUTDIR="$REPO_DIR/build/tmp/$target"
+    local IMAGE="$REPO_DIR/build/$target"
 
     modules_for_target "$target"
 
@@ -94,7 +99,7 @@ build_target() {
     echo ""
     echo "Assembling boot module..."
     echo "  $COMBINED_ENTRY.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$COMBINED_ENTRY.o" "$MARVIN_ASM/$COMBINED_ENTRY.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$(obj_name $COMBINED_ENTRY).o" "$MARVIN_ASM/$COMBINED_ENTRY.asm"
 
     # ---- Marvin modules ----
 
@@ -106,20 +111,20 @@ build_target() {
     echo ""
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
-        local obj_name=$(basename "$module")
+        local obj=$(obj_name "$module")
         echo "  $module.asm"
         z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" \
-            -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+            -o"$OUTDIR/$obj.o" "$MARVIN_ASM/$module.asm"
     done
 
     if [ -n "$RA8875_MODULES" ]; then
         echo ""
         echo "Assembling RA8875 modules..."
         for module in $RA8875_MODULES; do
-            local obj_name=$(basename "$module")
+            local obj=$(obj_name "$module")
             echo "  $module.asm"
             z88dk-z80asm -l -m -I"$RA8875_DIR" \
-                -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+                -o"$OUTDIR/$obj.o" "$RA8875_DIR/$module.asm"
         done
     fi
 
@@ -154,12 +159,12 @@ build_target() {
     # ---- Link ----
     # Boot module must be first (contains ORG 0x0000 and jump table)
 
-    ALL_OBJS="$OUTDIR/$COMBINED_ENTRY.o $OUTDIR/ENTRY.o"
+    ALL_OBJS="$OUTDIR/$(obj_name $COMBINED_ENTRY).o $OUTDIR/ENTRY.o"
     for module in $MARVIN_MODULES; do
-        ALL_OBJS="$ALL_OBJS $OUTDIR/$(basename $module).o"
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$(obj_name $module).o"
     done
     for module in $RA8875_MODULES; do
-        ALL_OBJS="$ALL_OBJS $OUTDIR/$(basename $module).o"
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$(obj_name $module).o"
     done
     ALL_OBJS="$ALL_OBJS $OUTDIR/$BASIC_MAIN.o"
     for module in $BASIC_MODULES; do
@@ -178,19 +183,20 @@ build_target() {
     # Remove DATA section binary - it lives in RAM, not ROM
     rm -f "$OUTDIR/${OUTPUT_NAME}_data.bin"
 
-    BIN_SIZE=$(wc -c < "$OUTDIR/$OUTPUT_NAME.bin" | tr -d ' ')
+    mv "$OUTDIR/$OUTPUT_NAME.bin" "$IMAGE.bin"
+    BIN_SIZE=$(wc -c < "$IMAGE.bin" | tr -d ' ')
 
-    xxd "$OUTDIR/$OUTPUT_NAME.bin" > "$OUTDIR/$OUTPUT_NAME.hex"
+    xxd "$IMAGE.bin" > "$IMAGE.hex"
     z88dk-appmake +hex --org $CODE_ORG \
-        -b "$OUTDIR/$OUTPUT_NAME.bin" \
-        -o "$OUTDIR/$OUTPUT_NAME.ihx"
+        -b "$IMAGE.bin" \
+        -o "$IMAGE.ihx"
 
     echo ""
     echo "Build complete:"
-    echo "  ROM image:   output/$OUTPUT_NAME.bin ($BIN_SIZE bytes at $CODE_ORG)"
-    echo "  Hex dump:    output/$OUTPUT_NAME.hex"
-    echo "  Intel HEX:   output/$OUTPUT_NAME.ihx"
-    echo "  Map file:    output/$OUTPUT_NAME.map"
+    echo "  ROM image:   build/$target.bin ($BIN_SIZE bytes at $CODE_ORG)"
+    echo "  Hex dump:    build/$target.hex"
+    echo "  Intel HEX:   build/$target.ihx"
+    echo "  Map file:    build/tmp/$target/$OUTPUT_NAME.map"
     echo ""
     echo "Memory layout:"
     echo "  ROM: $CODE_ORG - code ($BIN_SIZE bytes)"
@@ -201,8 +207,8 @@ build_target() {
 
 build_minimal() {
     local target=$1
-    local TARGET_DIR="$REPO_DIR/targets/$target"
-    local OUTDIR="$TARGET_DIR/output"
+    local OUTDIR="$REPO_DIR/build/tmp/$target"
+    local IMAGE="$REPO_DIR/build/${target}_minimal"
 
     modules_for_target "$target"
 
@@ -217,7 +223,7 @@ build_minimal() {
     echo "Assembling entry module..."
     echo "  $MINIMAL_ENTRY.asm"
     z88dk-z80asm -l -m -DMARVINORG=$CODE_ORG -I"$REPO_DIR" \
-        -o"$OUTDIR/$MINIMAL_ENTRY.o" "$MARVIN_ASM/$MINIMAL_ENTRY.asm"
+        -o"$OUTDIR/$(obj_name $MINIMAL_ENTRY).o" "$MARVIN_ASM/$MINIMAL_ENTRY.asm"
 
     # ---- Marvin and driver modules ----
 
@@ -229,19 +235,19 @@ build_minimal() {
     echo ""
     echo "Assembling modules..."
     for module in $MINIMAL_MODULES; do
-        local obj_name=$(basename "$module")
+        local obj=$(obj_name "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj.o" "$MARVIN_ASM/$module.asm"
     done
 
     if [ -n "$MINIMAL_RA8875_MODULES" ]; then
         echo ""
         echo "Assembling RA8875 modules..."
         for module in $MINIMAL_RA8875_MODULES; do
-            local obj_name=$(basename "$module")
+            local obj=$(obj_name "$module")
             echo "  $module.asm"
             z88dk-z80asm -l -m -I"$RA8875_DIR" \
-                -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+                -o"$OUTDIR/$obj.o" "$RA8875_DIR/$module.asm"
         done
     fi
 
@@ -249,13 +255,13 @@ build_minimal() {
     # Entry module must be first (contains ORG and jump table)
     # Link order: entry, MINIMAL_MODULES, MINIMAL_RA8875_MODULES
 
-    ALL_OBJS="$OUTDIR/$MINIMAL_ENTRY.o"
+    ALL_OBJS="$OUTDIR/$(obj_name $MINIMAL_ENTRY).o"
     for module in $MINIMAL_MODULES; do
-        local obj_name=$(basename "$module")
-        ALL_OBJS="$ALL_OBJS $OUTDIR/$obj_name.o"
+        local obj=$(obj_name "$module")
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$obj.o"
     done
     for module in $MINIMAL_RA8875_MODULES; do
-        ALL_OBJS="$ALL_OBJS $OUTDIR/$(basename $module).o"
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$(obj_name $module).o"
     done
     echo ""
     echo "Linking minimal modules at $CODE_ORG..."
@@ -264,19 +270,20 @@ build_minimal() {
         -r$CODE_ORG \
         $ALL_OBJS
 
-    BIN_SIZE=$(wc -c < "$OUTDIR/$MINIMAL_NAME.bin" | tr -d ' ')
+    mv "$OUTDIR/$MINIMAL_NAME.bin" "$IMAGE.bin"
+    BIN_SIZE=$(wc -c < "$IMAGE.bin" | tr -d ' ')
 
-    xxd "$OUTDIR/$MINIMAL_NAME.bin" > "$OUTDIR/$MINIMAL_NAME.hex"
+    xxd "$IMAGE.bin" > "$IMAGE.hex"
     z88dk-appmake +hex --org $CODE_ORG \
-        -b "$OUTDIR/$MINIMAL_NAME.bin" \
-        -o "$OUTDIR/$MINIMAL_NAME.ihx"
+        -b "$IMAGE.bin" \
+        -o "$IMAGE.ihx"
 
     echo ""
     echo "Minimal build complete:"
-    echo "  ROM image:   output/$MINIMAL_NAME.bin ($BIN_SIZE bytes at $CODE_ORG)"
-    echo "  Hex dump:    output/$MINIMAL_NAME.hex"
-    echo "  Intel HEX:   output/$MINIMAL_NAME.ihx"
-    echo "  Map file:    output/$MINIMAL_NAME.map"
+    echo "  ROM image:   build/${target}_minimal.bin ($BIN_SIZE bytes at $CODE_ORG)"
+    echo "  Hex dump:    build/${target}_minimal.hex"
+    echo "  Intel HEX:   build/${target}_minimal.ihx"
+    echo "  Map file:    build/tmp/$target/$MINIMAL_NAME.map"
 }
 
 # ---- Main ----

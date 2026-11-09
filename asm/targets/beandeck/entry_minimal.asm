@@ -1,4 +1,4 @@
-; entry_beandeck_minimal.asm - Minimal Marvin Entry Point (BeanDeck target)
+; entry_minimal.asm - Minimal Marvin Entry Point (BeanDeck target)
 ;
 ; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
 ; USB console output, keyboard or USB input.

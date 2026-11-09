@@ -1,4 +1,4 @@
-; entry_beanzee_minimal.asm - Minimal Marvin Entry Point (BeanZee target)
+; entry_minimal.asm - Minimal Marvin Entry Point (BeanZee target)
 ;
 ; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
 ; Boots directly to the monitor prompt.

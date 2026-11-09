@@ -90,8 +90,8 @@ echo "================"
 echo ""
 
 for target in beanzee beanboard beandeck; do
-    check_binary "$target (combined)" "$SCRIPT_DIR/targets/$target/output/marvin.bin"
-    check_binary "$target (minimal)"  "$SCRIPT_DIR/targets/$target/output/marvin_minimal.bin"
+    check_binary "$target (combined)" "$SCRIPT_DIR/build/$target.bin"
+    check_binary "$target (minimal)"  "$SCRIPT_DIR/build/${target}_minimal.bin"
 done
 
 echo ""

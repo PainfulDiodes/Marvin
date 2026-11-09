@@ -2,7 +2,7 @@
 
     EXTERN LCD_CTRL, LCD_DATA
     EXTERN LCD_RAMSTART
-    INCLUDE "asm/chars.inc"
+    INCLUDE "asm/core/chars.inc"
 
     PUBLIC lcd_init
     PUBLIC lcd_putchar

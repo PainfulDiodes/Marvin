@@ -1,4 +1,4 @@
-; entry_beanzee.asm - Entry Point (BeanZee target, combined firmware)
+; entry.asm - Entry Point (BeanZee target, combined firmware)
 ;
 ; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
 ; combined Marvin + BBC BASIC firmware.

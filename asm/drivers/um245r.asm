@@ -1,4 +1,4 @@
-    INCLUDE "asm/chars.inc"
+    INCLUDE "asm/core/chars.inc"
 
     EXTERN UM245R_CTRL, UM245R_DATA
 
