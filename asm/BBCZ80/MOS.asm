@@ -50,7 +50,7 @@
     EXTERN SYSTEM_RAMSTART  ; system - start of Marvin system RAM
 ;
 IFDEF INCLUDE_BDFS
-    INCLUDE "asm/bdfs.inc"
+    INCLUDE "asm/bdfs/bdfs.inc"
     EXTERN bdfs_select_drive
     EXTERN bdfs_set_drive
     EXTERN bdfs_file_write

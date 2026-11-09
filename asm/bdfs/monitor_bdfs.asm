@@ -1,8 +1,8 @@
 ; monitor_bdfs.asm - BDFS monitor layer
 ; Wraps bdfs.asm functions with console output for the monitor.
 
-    INCLUDE "asm/chars.inc"
-    INCLUDE "asm/bdfs.inc"
+    INCLUDE "asm/core/chars.inc"
+    INCLUDE "asm/bdfs/bdfs.inc"
 
     PUBLIC monitor_bdfs_format
     PUBLIC monitor_bdfs_dir

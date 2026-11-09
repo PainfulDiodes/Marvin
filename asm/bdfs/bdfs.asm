@@ -14,8 +14,8 @@
 ;   Address width: 24 bits   — passed as A:HL (A = addr[23:16], HL = addr[15:0])
 ;   Directory   : sector 0; file data starts at sector 1 (BDFS_DATA_START_SECTOR)
 
-    INCLUDE "asm/bdfs.inc"
-    INCLUDE "asm/chars.inc"
+    INCLUDE "asm/bdfs/bdfs.inc"
+    INCLUDE "asm/core/chars.inc"
 
 ; Magic bytes - used on the directory sector to indicate a formatted drive
 BDFS_MAGIC_0            EQU 0xBD

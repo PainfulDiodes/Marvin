@@ -4,16 +4,10 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-for target in beanzee beanboard beandeck; do
-    outdir="$SCRIPT_DIR/targets/$target/output"
-    if [ -d "$outdir" ]; then
-        echo "Cleaning $target"
-        rm -rf "$outdir"
-    fi
-done
+rm -rf "$SCRIPT_DIR/build"
 
 # Clean assembler listing files and generated includes
-rm -f "$SCRIPT_DIR"/asm/*.lis
-rm -f "$SCRIPT_DIR"/asm/version.inc
+rm -f "$SCRIPT_DIR"/asm/core/*.lis "$SCRIPT_DIR"/asm/bdfs/*.lis "$SCRIPT_DIR"/asm/targets/*/*.lis
+rm -f "$SCRIPT_DIR"/asm/core/version.inc
 rm -f "$SCRIPT_DIR"/asm/drivers/*.lis
 rm -f "$SCRIPT_DIR"/asm/BBCZ80/*.lis

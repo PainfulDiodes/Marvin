@@ -24,9 +24,9 @@ fi
 f=${1%.*} #extract base filename
 
 if [ "$minimal" = true ]; then
-    binary=targets/$f/output/marvin_minimal.bin
+    binary=build/${f}_minimal.bin
 else
-    binary=targets/$f/output/marvin.bin
+    binary=build/$f.bin
 fi
 echo "=== Binary: $binary"
 

@@ -1,30 +1,42 @@
-; entry_beanzee_minimal.asm - Minimal Marvin Entry Point (BeanZee target)
+; entry.asm - Entry Point (BeanZee target, combined firmware)
 ;
-; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
-; Boots directly to the monitor prompt.
+; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
+; combined Marvin + BBC BASIC firmware.
 ;
-    EXTERN STACK
-
-    EXTERN marvin_coldstart
-    EXTERN marvin_warmstart
-    EXTERN con_putchar
-    EXTERN con_getchar
-    EXTERN con_readchar
-    EXTERN con_puts
-    EXTERN con_putchar_hex
+; Provides:
+;   - CPU boot at 0x0000 (SP init)
+;   - RST vectors 0x0008-0x0038, all redirect to 0x0000 (hardware reset)
+;   - Marvin trampoline functions (ABI) at 0x0040
+;   - Boot selection (BeanZee: always monitor)
+;
+    EXTERN marvin_coldstart      ; monitor.asm - cold start
+    EXTERN marvin_warmstart     ; monitor.asm - warm start
+    EXTERN con_putchar          ; console - write character
+    EXTERN con_getchar          ; console - blocking read
+    EXTERN con_readchar         ; console - non-blocking read
+    EXTERN con_puts             ; console - print string
+    EXTERN con_putchar_hex      ; hex.asm - print hex byte
     EXTERN con_putchar_dec      ; string.asm - print byte as decimal
     EXTERN hex_byte_val         ; string.asm - parse 2 hex chars to byte value
     EXTERN usb_putchar          ; um245r.asm - USB write character
     EXTERN usb_puts             ; um245r.asm - USB print string
     EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
-
-    PUBLIC START
-
-    ORG MARVINORG
+    EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
+;
+    EXTERN STACK
+;
+;
+; ---- Boot Code ----
+;
+    ORG 0x0000
     ld sp, STACK
     jp _boot
-
-; RST vectors and trampoline functions (ABI) at fixed addresses - must match abi/marvin.inc
+;
+;
+; ---- RST Vectors ----
+;
+; All RST instructions redirect to 0x0000 (hardware reset)
+;
 ALIGN 0x0008
     jp 0x0000     ; RST 08H
 ALIGN 0x0010
@@ -39,6 +51,12 @@ ALIGN 0x0030
     jp 0x0000     ; RST 30H
 ALIGN 0x0038
     jp 0x0000     ; RST 38H / IM 1 vector
+;
+;
+; ---- Trampoline Functions (ABI) ----
+;
+; Fixed ROM addresses - must match abi/marvin.inc
+;
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
     jp con_putchar       ; 0x0043 - write character (A = char)
@@ -93,10 +111,6 @@ ALIGN 0x0040
 _stub:
     ret
 ;
-; START stub - no BBC BASIC in minimal build
-START:
-    jp marvin_warmstart
-;
 ;
 ; ---- Boot Selection ----
 ;
@@ -111,3 +125,4 @@ _boot_powerup:
     or c
     jr nz,_boot_powerup
     jp marvin_coldstart
+;

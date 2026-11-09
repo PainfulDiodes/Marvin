@@ -1,4 +1,4 @@
-    INCLUDE "asm/chars.inc"
+    INCLUDE "asm/core/chars.inc"
 
     EXTERN KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, KEYSCAN_OUT, KEYSCAN_IN
 

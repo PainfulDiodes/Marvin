@@ -1,4 +1,4 @@
-    INCLUDE "asm/chars.inc"
+    INCLUDE "asm/core/chars.inc"
 
     EXTERN CMD_BUFFER, RAMSTART
     EXTERN STACK

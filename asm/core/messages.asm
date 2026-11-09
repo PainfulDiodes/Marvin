@@ -6,7 +6,7 @@
 
 WELCOME_MSG:
                 defm "MARVIN "
-                INCLUDE "asm/version.inc"
+                INCLUDE "asm/core/version.inc"
                 defm "\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
