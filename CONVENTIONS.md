@@ -24,4 +24,4 @@ Feature flags are `DEFC` symbols in the target's `config.inc`, tested with `IFDE
 
 The trampoline table (ABI) is in `asm/core/trampoline.asm`. Addresses must match `abi/marvin.inc`; a hardware-dependent entry is `IFDEF <flag>` / `jp <function>` / `ELSE` / `jp _stub` / `ENDIF`, so every address is the same on every target.
 
-Each build is described by a z80asm project list at the repo root, `<target>.lst` or `<target>_minimal.lst`, listing its separately assembled modules in link order. List files hold sources and other list files only; assembler options stay in `build.sh`, apart from the two `-D` options in `basic.lst`.
+Each build is described by a manifest in `manifests/`, `<target>.lst` or `<target>_minimal.lst`: a z80asm project list, listing its separately assembled modules in link order. List files hold sources and other list files only; assembler options stay in `build.sh`, apart from the two `-D` options in `basic.lst`.

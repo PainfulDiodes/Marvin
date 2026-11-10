@@ -33,7 +33,7 @@ The build scripts assemble all submodule sources directly — you do not need to
 ./build-all.sh
 ```
 
-To build one firmware image, name its `.lst` file:
+To build one firmware image, name its manifest (a `.lst` file in `manifests/`):
 
 ```bash
 ./build.sh beanzee
@@ -53,14 +53,14 @@ To program an EEPROM with a [minipro](https://gitlab.com/DavidGriffith/minipro) 
 
 ### How a build is put together
 
-- `<name>.lst` (repo root) — a z80asm project list: the separately assembled modules for one build, in link order. `build.sh` passes it to z80asm as `@<name>.lst`
-- `basic.lst` — the BBC BASIC modules, shared by every BASIC build. Including it also sets `-DINCLUDE_BASIC`, which is what makes a build a BASIC build
+- `manifests/<name>.lst` — the manifest for one build: the separately assembled modules, in link order, as a z80asm project list. `build.sh` passes it to z80asm as `@manifests/<name>.lst`. Source paths in a manifest are relative to the repo root; `@` references to other manifests are relative to `manifests/`
+- `manifests/basic.lst` — the BBC BASIC modules, shared by every BASIC build. Including it also sets `-DINCLUDE_BASIC`, which is what makes a build a BASIC build
 - `asm/targets/<target>/marvin.asm` — all of Marvin's own code for a target, as one module: it `INCLUDE`s the target's `config.inc` and every Marvin source file the target uses, in order
 - `asm/targets/<target>/config.inc` — the hardware the target has, as `DEFC` flags: `HAS_LCD`, `HAS_KEYBOARD`, `HAS_RA8875`, `HAS_FLASH`
 - `asm/targets/<target>/entry.asm` — reset and RST vectors, the trampoline table (from `asm/core/trampoline.asm`) and the boot sequence
 - `asm/targets/<target>/mos.asm` — wrapper that assembles the shared `asm/BBCZ80/MOS.asm` with the target's flags (BASIC builds only)
 
-For example, `beandeck.lst`:
+For example, `manifests/beandeck.lst`:
 
 ```text
 ; BeanDeck (BeanBoardSPI Rev B) with BBC BASIC
