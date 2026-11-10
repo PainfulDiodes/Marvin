@@ -44,11 +44,11 @@ Each build produces `build/<name>.bin`, plus `.hex` hex dump and `.ihx` (Intel H
 
 For each target there is a main output which includes the BASIC interpreter, and in addition a `minimal` output which contains only the monitor program.
 
-To program an EEPROM with a [minipro](https://gitlab.com/DavidGriffith/minipro) programmer, pass the binary to the script for the device:
+To program an EEPROM with a [minipro](https://gitlab.com/DavidGriffith/minipro) programmer, e.g. a 32k AT28C256 or an 8k AT28C64B (minimal builds fit in 8k):
 
 ```bash
-./burn-AT28C256.sh build/beanzee.bin
-./burn-AT28C64B.sh build/beanzee_minimal.bin
+minipro -u -s -p AT28C256 -w build/beanzee.bin
+minipro -u -s -p AT28C64B -w build/beanzee_minimal.bin
 ```
 
 ### How a build is put together
