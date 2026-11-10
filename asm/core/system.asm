@@ -23,7 +23,6 @@ ENDIF
 
 ; TODO we need to reconsider the RAM allocation here - its getting messy and there's a mix of conditional / unconditional allocations
 
-; TODO this conditional is unneccessary - LCD is not a submodule
 IFDEF HAS_LCD
     EXTERN LCD_RAMSIZE
 ELSE
