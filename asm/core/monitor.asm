@@ -21,7 +21,7 @@
     EXTERN START
     EXTERN WARM
     ENDIF
-    IFDEF INCLUDE_BDFS
+    IFDEF HAS_FLASH
     EXTERN bdfs_init
     EXTERN bdfs_get_drive
     EXTERN monitor_bdfs_format
@@ -45,7 +45,7 @@
 marvin_coldstart:
     ld hl,WELCOME_MSG
     call con_puts
-    IFDEF INCLUDE_BDFS
+    IFDEF HAS_FLASH
     call bdfs_init
     ENDIF
 
@@ -56,7 +56,7 @@ marvin_warmstart:
 _prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
-    IFDEF INCLUDE_BDFS
+    IFDEF HAS_FLASH
     call bdfs_get_drive
     jr nz, _prompt_no_drive
     call con_putchar            ; drive letter
@@ -164,7 +164,7 @@ _cmd_check:
     ; ':' = load from intel hex format
     cp ':'
     jp z,_cmd_load
-    IFDEF INCLUDE_BDFS
+    IFDEF HAS_FLASH
     cp 'f'
     jp z,monitor_bdfs_format
     cp 'D'
@@ -394,7 +394,7 @@ _cmd_basic_warm:
 _cmd_help:
     ld hl, HELP_MSG
     call con_puts
-    IFDEF INCLUDE_BDFS
+    IFDEF HAS_FLASH
     ld hl, BDFS_HELP_MSG
     call con_puts
     ENDIF
