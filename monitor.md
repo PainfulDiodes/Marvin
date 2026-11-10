@@ -49,7 +49,7 @@ When BeanZee is reset it responds with a Marvin welcome message and a prompt, si
     https://github.com/PainfulDiodes
     >
 
-*Using BeanBoard, either the BeanZee USB or the BeanBoard keyboard and display can be used for the console. The default console input/output for BeanBoard is the keyboard and LCD display. Holding down the BeanBoard Shift key when resetting BeanZee will switch to using the USB for the console. Resetting without the Shift key will switch to using the BeanBoard keyboard/display.*
+*Using BeanBoard, either the BeanZee USB or the BeanBoard keyboard and display can be used for the console. The default console input/output for BeanBoard is the keyboard and LCD display. Holding down the BeanBoard Shift key when resetting BeanZee will switch to using the USB for the console, and holding down Ctrl will switch to using the BeanBoard keyboard/display. Resetting without either key keeps the console that was in use before the reset; after power-up it is the BeanBoard keyboard/display.*
 
 Marvin interprets inputs character-by-character, echoing each character back to the console, and waits for a carriage return character (\r) before processing a command. 
 

@@ -4,3 +4,4 @@
     PUBLIC CONSOLE_STATUS
 
 CONSOLE_STATUS:     DEFS 1                  ; active console (CONSOLE_STATUS_USB / CONSOLE_STATUS_BEANBOARD)
+_CONSOLE_MAGIC:     DEFS 2                  ; magic number: CONSOLE_STATUS was set by an earlier boot (console_select.asm)

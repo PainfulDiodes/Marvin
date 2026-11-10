@@ -17,6 +17,11 @@ Drivers
 * `RA8875_GPIO`, `RA8875_SPI_CTRL`, `RA8875_SPI_DATA` aliases removed from `system.asm`; transport files EXTERN port constants directly
 * BeanBoard GPIO pin assignments extracted to `beanboard.inc`; shared between `ra8875_beanboard.asm` and `spi_beanboard.asm`
 
+Console
+
+* The console selection is kept over a reset (a magic number in RAM tells a reset from a power-up): Shift-Reset selects USB, Ctrl-Reset the keyboard and display, and a plain reset keeps the previous console. After power-up it is the keyboard and display, as before
+* `key_modifiers` (ABI `0x0067`) also reports Ctrl (`MOD_KEY_CONTROL`)
+
 Build
 
 * `beandeck_reva` build target added (BeanBoardSPI Rev A hardware; uses `spi_beanboardspi_reva` in place of `spi_beanboardspi_revb`)

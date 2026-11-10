@@ -35,7 +35,7 @@ MARVIN_LCD_PUTS             EQU 0x0061  ; in: HL=str(0-term)   write string to L
 
 ; Keyboard  (beanboard, beandeck)
 MARVIN_KEY_READCHAR         EQU 0x0064  ; out: A=char (0=none) non-blocking keyboard read
-MARVIN_KEY_MODIFIERS        EQU 0x0067  ; out: A=modifier bits read modifier key state
+MARVIN_KEY_MODIFIERS        EQU 0x0067  ; out: A=modifier bits (MOD_KEY_SHIFT, MOD_KEY_CONTROL) read modifier key state
 
 ; RA8875 TFT display  (beandeck)
 MARVIN_RA8875_INIT          EQU 0x006A  ; out: Z=ok NZ=fail    initialise RA8875

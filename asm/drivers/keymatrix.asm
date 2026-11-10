@@ -7,6 +7,7 @@
     PUBLIC key_readchar
     PUBLIC key_modifiers
     PUBLIC MOD_KEY_SHIFT
+    PUBLIC MOD_KEY_CONTROL
     PUBLIC QWERTY_CAPS
 
 DEBOUNCE_DELAY  equ 0x4000
@@ -16,6 +17,12 @@ MOD_KEY_FN      equ 0b00000010
 MOD_KEY_CONTROL equ 0b00000100
 MOD_KEY_ALT     equ 0b00001000
 MOD_KEY_CMD     equ 0b00010000
+
+; modifier key positions in the matrix: row strobe (KEYSCAN_OUT) and column bit (KEYSCAN_IN)
+_SHIFT_ROW      equ 1 << 4
+_SHIFT_COL      equ 1 << 0
+_CTRL_ROW       equ 1 << 6
+_CTRL_COL       equ 1 << 1
 
 ; return keyboard char value in A, or 0
 key_readchar:
@@ -120,21 +127,31 @@ _key_rowscan:
     pop de                      
     ret
 
-; return bitmap representing modifier keys in A
+; return bitmap representing modifier keys in A: MOD_KEY_SHIFT, MOD_KEY_CONTROL
 key_modifiers:
-    ld a,0b00010000 ; row 4
+    push bc
+    ; no modifiers yet
+    ld b,0
     ; output row strobe
-    out (KEYSCAN_OUT),a            
+    ld a,_SHIFT_ROW
+    out (KEYSCAN_OUT),a
     ; get column values
     in a,(KEYSCAN_IN)
-    and 0b00000001 ; row 4, bit 0 is SHIFT
-    ; left shift modifier
-    jr nz,@shift
-    ; no modifiers
-    ld a,0
-    ret
-@shift:
-    ld a,MOD_KEY_SHIFT
+    and _SHIFT_COL
+    jr z,@ctrl
+    ld b,MOD_KEY_SHIFT
+@ctrl:
+    ; output row strobe
+    ld a,_CTRL_ROW
+    out (KEYSCAN_OUT),a
+    ; get column values
+    in a,(KEYSCAN_IN)
+    and _CTRL_COL
+    ld a,b
+    jr z,@done
+    or MOD_KEY_CONTROL
+@done:
+    pop bc
     ret
 
 ; A contains row bitmap representing new keystrokes,  
