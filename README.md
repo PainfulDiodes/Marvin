@@ -39,9 +39,46 @@ To build one firmware image, name its `.lst` file:
 ./build.sh beanzee_minimal
 ```
 
-Output binaries are placed in `build/`.
+Each build produces `build/<name>.bin`, plus `.hex` hex dump and `.ihx` (Intel HEX). z80asm's working files (`.o`, `.lis`, `.map`) go in `build/tmp/`. `./clean.sh` removes `build/`.
 
-For each target there is a `<target>` output which includes the BASIC interpreter, and in addition a `<target>_minimal` output which contains only the monitor program.
+For each target there is a main output which includes the BASIC interpreter, and in addition a `minimal` output which contains only the monitor program.
+
+To program an EEPROM with a [minipro](https://gitlab.com/DavidGriffith/minipro) programmer, pass the binary to the script for the device:
+
+```bash
+./burn-AT28C256.sh build/beanzee.bin
+./burn-AT28C64B.sh build/beanzee_minimal.bin
+```
+
+### How a build is put together
+
+- `<name>.lst` (repo root) — a z80asm project list: the separately assembled modules for one build, in link order. `build.sh` passes it to z80asm as `@<name>.lst`
+- `basic.lst` — the BBC BASIC modules, shared by every BASIC build. Including it also sets `-DINCLUDE_BASIC`, which is what makes a build a BASIC build
+- `asm/targets/<target>/marvin.asm` — all of Marvin's own code for a target, as one module: it `INCLUDE`s the target's `config.inc` and every Marvin source file the target uses, in order
+- `asm/targets/<target>/config.inc` — the hardware the target has, as `DEFC` flags: `HAS_LCD`, `HAS_KEYBOARD`, `HAS_RA8875`, `HAS_FLASH`
+- `asm/targets/<target>/entry.asm` — reset and RST vectors, the trampoline table (from `asm/core/trampoline.asm`) and the boot sequence
+- `asm/targets/<target>/mos.asm` — wrapper that assembles the shared `asm/BBCZ80/MOS.asm` with the target's flags (BASIC builds only)
+
+For example, `beandeck.lst`:
+
+```text
+; BeanDeck with BBC BASIC
+asm/targets/beandeck/marvin.asm
+ra8875-z80-repo/asm/ra8875.asm
+ra8875-z80-repo/asm/console.asm
+ra8875-z80-repo/targets/beanboardspi.asm
+BBCZ80-repo/src/MAIN.asm
+@basic.lst
+asm/targets/beandeck/mos.asm
+```
+
+Source layout:
+
+- `asm/core/` — monitor, console selection, strings, system RAM, messages and the trampoline table
+- `asm/drivers/` — hardware drivers (USB, LCD, keyboard, W25Q flash)
+- `asm/bdfs/` — the BeanDeck File System and its monitor commands
+- `asm/BBCZ80/` — the layer connecting BBC BASIC to Marvin (`ENTRY`, `HOOK`, `MOS`)
+- `asm/targets/<target>/` — the target files described above
 
 ## Memory Map
 
