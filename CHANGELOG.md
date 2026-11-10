@@ -21,6 +21,10 @@ Build
 
 * `beandeck_reva` build target added (BeanBoardSPI Rev A hardware; uses `spi_beanboardspi_reva` in place of `spi_beanboardspi_revb`)
 
+Source
+
+* Label naming made consistent: jump targets inside a function are now z80asm `@` local labels (e.g. `@loop`), leaving `_` labels for private helpers and data, consistently named so they are unique across the target's module; see `CONVENTIONS.md`. No change to the binaries
+
 ## 1.4
 
 Hardware Support
