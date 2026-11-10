@@ -27,7 +27,7 @@ usb_readchar:
     ; data to read? (active low)
     bit 1,a
     ; no, the buffer is empty
-    jr nz,_usb_no_char
+    jr nz,@no_char
     ; yes, read the received char
     in a,(UM245R_DATA)
     ; is CR?
@@ -37,7 +37,7 @@ usb_readchar:
     ; yes: convert CR to LF
     ld a, CHAR_LF
     ret 
-_usb_no_char:
+@no_char:
     ld a,0
     ret
 
@@ -45,11 +45,11 @@ usb_putchar:
     ; newline?
     cp CHAR_LF
     ; no: just send the char
-    jr nz,_do_usb_put
+    jr nz,@put
     ld a, CHAR_CR
     call _usb_put
     ld a, CHAR_LF
-_do_usb_put:
+@put:
     call _usb_put
     ret
 
@@ -58,13 +58,13 @@ _usb_put:
     push bc
     ; stash the transmit character
     ld b,a
-_usb_put_loop: 
+@loop: 
     ; get the USB status
     in a,(UM245R_CTRL)
     ; ready to transmit? (active low)
     bit 0,a
     ; no: bit is high
-    jr nz,_usb_put_loop
+    jr nz,@loop
     ; yes: restore the stashed transmit character
     ld a,b
     ; transmit the character
@@ -75,20 +75,20 @@ _usb_put_loop:
 ; print a zero-terminated string pointed to by hl to the USB
 usb_puts:
     push hl
-_usb_puts_loop:
+@loop:
     ; get character from string
     ld a,(hl)
     ; is it zero?
     cp 0
     ; yes
-    jr z, _usb_puts_end
+    jr z, @end
     ; no: send character
     call usb_putchar
     ; next character position
     inc hl
     ; loop for next character
-    jp _usb_puts_loop
-_usb_puts_end:
+    jp @loop
+@end:
     pop hl
     ret
 

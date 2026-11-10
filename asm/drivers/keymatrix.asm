@@ -28,35 +28,35 @@ key_readchar:
     ld hl,KEY_MATRIX_BUFFER
     call key_modifiers
     ; initialise map pointer
-    ld de,QWERTY_KEYMAP_L
+    ld de,_QWERTY_KEYMAP_L
     ; shift key down?
     and MOD_KEY_SHIFT
-    jp z,_keyscanloop
-    ld de,QWERTY_KEYMAP_U
-_keyscanloop:
-    call _rowscan
+    jp z,@scan_loop
+    ld de,_QWERTY_KEYMAP_U
+@scan_loop:
+    call _key_rowscan
     ; ASCII returned in A, or 0
-    call _colscan
+    call _key_colscan
     cp 0
-    jp z,_keyscanloop_next      ; no key this row
+    jp z,@scan_loop_next        ; no key this row
     cp QWERTY_CAPS
-    jp z,key_readchar_end       ; lock key: return 5 for console to handle
+    jp z,@end                   ; lock key: return 5 for console to handle
     ; apply caps lock to letters only
     ld b,a                      ; save char (B = row bit, safe to clobber as we exit loop)
     ld a,(CAPS_LOCK_STATE)
     or a
-    jr z,_caps_done             ; caps off: pass through
+    jr z,@caps_done             ; caps off: pass through
     ld a,b
     cp 'a'
-    jr c,_caps_done             ; below 'a'
+    jr c,@caps_done             ; below 'a'
     cp 'z'+1
-    jr nc,_caps_done            ; above 'z': not a lowercase letter, pass through
+    jr nc,@caps_done            ; above 'z': not a lowercase letter, pass through
     sub 0x20                    ; a-z -> A-Z
     ld b,a
-_caps_done:
+@caps_done:
     ld a,b
-    jp key_readchar_end
-_keyscanloop_next:
+    jp @end
+@scan_loop_next:
     ; move the pointer of previous values to the next row slot
     inc hl
     ; increment row counter
@@ -66,26 +66,26 @@ _keyscanloop_next:
     ; shift row bit left - when we've done all 8, it will move to the carry flag
     rl b
     ; loop if not done all rows
-    jr nc,_keyscanloop
-key_readchar_end:
+    jr nc,@scan_loop
+@end:
     ; debounce delay, restore state and return
-    call _debounce_delay
+    call _key_debounce_delay
     pop hl
     pop de
     pop bc
     ret
 
-_debounce_delay:
+_key_debounce_delay:
     push af
     push de
     ld de,DEBOUNCE_DELAY
-_delay_loop:
+@loop:
     dec de
     nop
     ld a, d
     cp 0
-    jr nz,_delay_loop
-_delay_end:
+    jr nz,@loop
+@end:
     pop de
     pop af
     ret
@@ -95,7 +95,7 @@ _delay_end:
 ; C contains row count,
 ; HL contains a pointer to the old value.
 ; return value in A
-_rowscan:                       
+_key_rowscan:                       
     ; preserve registers
     push de                     
     ; fetch previous value for comparison
@@ -127,36 +127,36 @@ key_modifiers:
     in a,(KEYSCAN_IN)
     and 0b00000001 ; row 4, bit 0 is SHIFT
     ; left shift modifier
-    jr nz,_modifier_shift
+    jr nz,@shift
     ; no modifiers
     ld a,0
     ret
-_modifier_shift:
+@shift:
     ld a,MOD_KEY_SHIFT
     ret
 
 ; A contains row bitmap representing new keystrokes,  
 ; DE contains a pointer to the ASCII map for the row - which is incremented in the subroutine
 ; first printable character returned in A
-_colscan:
+_key_colscan:
     ; preserve registers
     push bc
     ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
     ld c,0x01
     ; stash the bitmap
     ld b,a                    
-_colscanloop:
+@loop:
     ; reload the bitmap
     ld a,b
     ; mask the bitmap - use the column mask (C) over the bitmap value in A
     and c
     ; if zero then no keypress
-    jr z,_colscanloopnext
+    jr z,@loop_next
     ld a,(de)
     ; ASCII is 0?
     cp 0
-    jr nz,_colscanend
-_colscanloopnext:
+    jr nz,@end
+@loop_next:
     ; increment character map pointer
     inc de
     ; clear the carry flag
@@ -164,8 +164,8 @@ _colscanloopnext:
     ; shift row bit left - when we've done all 8, it will move to the carry flag
     rl c                        
     ; loop if not done all rows
-    jr nc,_colscanloop          
-_colscanend:
+    jr nc,@loop          
+@end:
     ; restore registers 
     pop bc
     ret
@@ -183,12 +183,12 @@ QWERTY_CURS_LEFT equ 3
 QWERTY_CURS_RIGHT equ 4
 QWERTY_CAPS equ 5
 
-QWERTY_KEYMAP_L:
+_QWERTY_KEYMAP_L:
     db CHAR_ESC,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,CHAR_BS,'7','8','9'
     db CHAR_TAB,'a','s','d','f','g','h','j','k','l',';',CHAR_QUOTE,CHAR_LF,'4','5','6'
     db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',CHAR_SLASH,QWERTY_CURS_UP,'1','2','3'
     db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',CHAR_LF
-QWERTY_KEYMAP_U:
+_QWERTY_KEYMAP_U:
     db CHAR_ESC,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,CHAR_BS,'&','*','('
     db CHAR_TAB,'A','S','D','F','G','H','J','K','L',':','"',CHAR_LF,'$','%','^'
     db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',CHAR_SLASH,QWERTY_CURS_UP,'!','@','#'

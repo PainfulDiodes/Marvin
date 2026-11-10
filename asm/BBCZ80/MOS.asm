@@ -103,9 +103,9 @@ CLRTAB:
 OSWRCH:
     PUSH AF
     CP CR
-    JR Z,_OSWRCH_DONE   ; Swallow CR (Marvin adds CR before LF)
+    JR Z,@DONE          ; Swallow CR (Marvin adds CR before LF)
     CALL con_putchar
-_OSWRCH_DONE:
+@DONE:
     POP AF
     RET
 ;
@@ -126,13 +126,13 @@ PROMPT:
 OSRDCH:
     LD A,(_INKEY)       ; Check for buffered key
     OR A
-    JR Z,_OSRDCH_CALL
+    JR Z,@CALL
     PUSH HL
     LD HL,_INKEY
     LD (HL),0           ; Clear buffer
     POP HL
     RET
-_OSRDCH_CALL:
+@CALL:
     CALL con_getchar    ; Blocking read
     CP LF               ; Marvin returns LF for Enter
     RET NZ
@@ -155,32 +155,32 @@ OSKEY:
     SCF
     RET NZ              ; Return buffered key
     PUSH DE
-_OSKEY_LOOP:
+@LOOP:
     CALL con_readchar ; Non-blocking read
     OR A
-    JR NZ,_OSKEY_GOT
+    JR NZ,@GOT
     DEC HL              ; Decrement timeout
     LD A,H
     OR L
-    JR NZ,_OSKEY_LOOP
+    JR NZ,@LOOP
     POP DE
     OR A                ; Clear carry = timeout
     RET
-_OSKEY_GOT:
+@GOT:
     POP DE
     CP LF               ; Marvin returns LF for Enter
-    JR NZ,_OSKEY_NOTLF
+    JR NZ,@NOTLF
     LD A,CR             ; Convert to CR for BASIC
-_OSKEY_NOTLF:
+@NOTLF:
     CP ESC
     SCF
     RET NZ              ; Non-ESC key, carry set
     PUSH HL             ; ESC pressed
     LD HL,_FLAGS
     BIT 6,(HL)          ; Escape disabled?
-    JR NZ,_OSKEY_ESCDIS
+    JR NZ,@ESCDIS
     SET 7,(HL)          ; Set escape flag
-_OSKEY_ESCDIS:
+@ESCDIS:
     POP HL
     RET
 ;
@@ -192,32 +192,32 @@ _OSKEY_ESCDIS:
 ;   Destroys: A,B,C,D,E,H,L,F
 ;
 OSLINE:
-_OSLINE_LOOP:
+@LOOP:
     CALL OSRDCH
     CP CR
-    JR Z,_OSLINE_DONE
+    JR Z,@DONE
     CP BS
-    JR Z,_OSLINE_BS
+    JR Z,@BS
     CP DEL
-    JR Z,_OSLINE_BS
+    JR Z,@BS
     CP ESC
-    JR Z,_OSLINE_ESC
+    JR Z,@ESC
     CP ' '
-    JR C,_OSLINE_LOOP   ; Ignore control characters
+    JR C,@LOOP          ; Ignore control characters
     LD B,A              ; Save character
     LD A,L
     CP 254              ; Buffer full?
     LD A,B              ; Restore character
-    JR NC,_OSLINE_LOOP  ; Full, ignore
+    JR NC,@LOOP         ; Full, ignore
     LD (HL),A           ; Store character
     INC L
     CALL OSWRCH         ; Echo
-    JR _OSLINE_LOOP
+    JR @LOOP
 ;
-_OSLINE_BS:
+@BS:
     LD A,L
     OR A
-    JR Z,_OSLINE_LOOP   ; At start, nothing to delete
+    JR Z,@LOOP          ; At start, nothing to delete
     DEC L
     LD A,BS
     CALL OSWRCH
@@ -225,16 +225,16 @@ _OSLINE_BS:
     CALL OSWRCH
     LD A,BS
     CALL OSWRCH
-    JR _OSLINE_LOOP
+    JR @LOOP
 ;
-_OSLINE_DONE:
+@DONE:
     LD (HL),CR          ; Terminate line
     CALL CRLF
     XOR A               ; A=0
     LD L,A              ; L=0 (point to buffer start)
     RET
 ;
-_OSLINE_ESC:
+@ESC:
     LD (HL),CR          ; Terminate line
     CALL CRLF
     LD HL,_FLAGS
@@ -269,14 +269,14 @@ _TEST:
     OR A
     RET Z               ; No data
     CP LF               ; Marvin returns LF for Enter
-    JR NZ,_TEST_NOTLF
+    JR NZ,@NOTLF
     LD A,CR             ; Convert to CR for BASIC
-_TEST_NOTLF:
+@NOTLF:
     CP ESC
-    JR Z,_TEST_ESC
+    JR Z,@ESC
     LD (_INKEY),A       ; Buffer non-ESC key
     RET
-_TEST_ESC:
+@ESC:
     LD HL,_FLAGS
     BIT 6,(HL)          ; Escape disabled?
     RET NZ
@@ -302,15 +302,15 @@ BYE:
 ;
 OSCLI:
     ld de,CMD_BUFFER     ; copy command string into monitor buffer,
-_OSCLI_COPY:             ; translating CR terminator to NUL
+@COPY:                   ; translating CR terminator to NUL
     ld a,(hl)
     cp CR
-    jr z,_OSCLI_DONE
+    jr z,@DONE
     ld (de),a
     inc hl
     inc de
-    jr _OSCLI_COPY
-_OSCLI_DONE:
+    jr @COPY
+@DONE:
     xor a
     ld (de),a            ; NUL terminator
     ld hl,CMD_BUFFER
@@ -340,15 +340,15 @@ IFDEF HAS_FLASH
     push de                     ; save source (_normalise_filename destroys DE)
     call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore source (does not affect flags)
-    jr nz, _ossave_err
+    jr nz, @err
     call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
-    jr nz, _ossave_err
+    jr nz, @err
     call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
-    jr nz, _ossave_err
+    jr nz, @err
     call bdfs_file_write        ; HL=filename, DE=src, BC=len; Z=ok, NZ+A=BDFS_ERR_*
-    jr nz, _ossave_err
+    jr nz, @err
     ret
-_ossave_err:
+@err:
     call _bdfs_error       ; does not return
 ELSE
     XOR A
@@ -369,23 +369,23 @@ IFDEF HAS_FLASH
     push de                     ; save dest (_normalise_filename destroys DE)
     call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore dest
-    jr nz, _osload_err
+    jr nz, @err
     call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
-    jr nz, _osload_err
+    jr nz, @err
     call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
-    jr nz, _osload_err
+    jr nz, @err
     call bdfs_file_read         ; HL=filename, DE=dest, BC=max_space; Z=ok, BC=bytes_loaded; NZ+A=BDFS_ERR_*
-    jr nz, _osload_err
+    jr nz, @err
     scf                         ; carry SET = success
     ret
-_osload_err:
+@err:
     ; OSLOAD is supposed to signal "file too large" by returning carry clear, 
     ; letting BASIC raise its own "Too big" error rather than an OS-level error. 
     ; The carry-clear convention comes from the BBC BASIC MOS spec
     cp BDFS_ERR_FILE_TOO_LARGE
-    jr z, _osload_too_large
+    jr z, @too_large
     call _bdfs_error            ; A = BDFS_ERR_*; does not return
-_osload_too_large:
+@too_large:
     or a                        ; carry CLEAR = file too large; BASIC raises the error
     ret
 ELSE
@@ -501,64 +501,64 @@ _normalise_filename:
     ; Step 1: walk string, upcase letters, replace CR with NUL; DE ends at NUL
     ld d, h
     ld e, l
-_norm_upcase_loop:
+@upcase_loop:
     ld a, (de)
     cp CR
-    jr z, _norm_got_cr
+    jr z, @got_cr
     cp 'a'
-    jr c, _norm_not_lower
+    jr c, @not_lower
     cp 'z'+1
-    jr nc, _norm_not_lower
+    jr nc, @not_lower
     sub 'a'-'A'             ; convert to upper
-_norm_not_lower:
+@not_lower:
     ld (de), a
     inc de
-    jr _norm_upcase_loop
-_norm_got_cr:
+    jr @upcase_loop
+@got_cr:
     xor a
     ld (de), a              ; NUL-terminate; DE = ptr to NUL
     ; Step 2: check for drive prefix 'X:' (string already upcased)
     ld a, (hl)
     cp 'A'
-    jr c, _norm_no_drive
+    jr c, @no_drive
     cp 'Z'+1
-    jr nc, _norm_no_drive
+    jr nc, @no_drive
     inc hl
     ld a, (hl)
     dec hl
     cp ':'
-    jr nz, _norm_no_drive
+    jr nz, @no_drive
     ld a, (hl)              ; A = drive letter
     push de                 ; save NUL ptr across call
     call bdfs_set_drive     ; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE; destroys AF
     pop de
-    jr nz, _norm_bad_drive
+    jr nz, @bad_drive
     inc hl
     inc hl                  ; advance past 'X:'
-    jr _norm_check_dot
-_norm_bad_drive:
+    jr @check_dot
+@bad_drive:
     pop bc
     ret                     ; A = BDFS_ERR_BAD_DRIVE, NZ
-_norm_no_drive:
+@no_drive:
     ; Step 3: scan from HL for '.'; append ".BBC\0" at DE if none found
-_norm_check_dot:
+@check_dot:
     push hl                 ; save filename start for return
     ld b, h
     ld c, l                 ; BC = scan pointer
-_norm_dot_scan:
+@dot_scan:
     ld a, (bc)
     or a
-    jr z, _norm_no_dot
+    jr z, @no_dot
     cp '.'
-    jr z, _norm_has_dot
+    jr z, @has_dot
     inc bc
-    jr _norm_dot_scan
-_norm_has_dot:
+    jr @dot_scan
+@has_dot:
     pop hl
     xor a                   ; A = 0 (ok)
     pop bc
     ret
-_norm_no_dot:
+@no_dot:
     ld a, '.'
     ld (de), a
     inc de
@@ -587,9 +587,9 @@ _bdfs_error:
     call bdfs_get_err_msg   ; A → HL = null-terminated message (or 0 if unknown)
     ld a, h
     or l
-    jr nz, _bdfs_error_go
+    jr nz, @go
     ld hl, _MSG_IO_ERR
-_bdfs_error_go:
+@go:
     pop af                  ; restore A = BDFS error code (passed to EXTERR as error number)
     push hl                 ; EXTERR's first instruction is POP HL: picks up our message ptr
     JP EXTERR               ; no return; BASIC error handler resets SP

@@ -12,13 +12,13 @@ console_select:
     ; shift key down?
     and MOD_KEY_SHIFT
     ; yes shift
-    jp nz,_console_select_usb
+    jp nz,@usb
     ; no shift
     ld a,CONSOLE_STATUS_BEANBOARD
     ld hl,CONSOLE_STATUS
     ld (hl),a
     ret
-_console_select_usb:
+@usb:
     ld a,CONSOLE_STATUS_USB
     ld hl,CONSOLE_STATUS
     ld (hl),a

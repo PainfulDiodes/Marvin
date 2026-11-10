@@ -71,20 +71,20 @@ ENDIF
 ;
 _boot:
     ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
-_boot_powerup:
+@powerup:
     nop
     dec bc
     ld a,b
     or c
-    jr nz,_boot_powerup
+    jr nz,@powerup
     call lcd_init
     ld bc,0x8000                ; post-lcd_init delay (~100ms at 10MHz)
-_boot_lcd_init_delay:
+@lcd_init_delay:
     nop
     dec bc
     ld a,b
     or c
-    jr nz,_boot_lcd_init_delay
+    jr nz,@lcd_init_delay
     call console_select
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup

@@ -28,15 +28,15 @@ con_readchar:
     ld hl,CONSOLE_STATUS
     ld a,CONSOLE_STATUS_BEANBOARD
     and (hl)
-    jr nz,_readchar_keyboard
+    jr nz,@keyboard
     ld a,CONSOLE_STATUS_USB
     and (hl)
-    jr nz,_readchar_usb
-    jr _readchar_end
-_readchar_keyboard:
+    jr nz,@usb
+    jr @end
+@keyboard:
     call key_readchar
     cp QWERTY_CAPS
-    jr nz,_readchar_end
+    jr nz,@end
     ; toggle caps lock state
     ld a,(CAPS_LOCK_STATE)
     xor 0x01
@@ -44,15 +44,15 @@ _readchar_keyboard:
     ; set cursor colour to reflect new caps lock state
     or a                                ; test new value (flags survive the ld above)
     ld a,RA8875_COL_WHITE
-    jr nz,_readchar_caps_colour         ; caps on: use white
+    jr nz,@caps_colour                  ; caps on: use white
     ld a,RA8875_COL_GREEN               ; caps off: use green
-_readchar_caps_colour:
+@caps_colour:
     call ra8875_console_set_cursor_colour
     xor a               ; return 0 (consume keypress)
-    jr _readchar_end
-_readchar_usb:
+    jr @end
+@usb:
     call usb_readchar
-_readchar_end:
+@end:
     pop hl
     ret
 
@@ -64,19 +64,19 @@ con_putchar:
     ld hl,CONSOLE_STATUS
     ld a,CONSOLE_STATUS_BEANBOARD
     and (hl)
-    jr nz,_putchar_ra8875
+    jr nz,@ra8875
     ld a,CONSOLE_STATUS_USB
     and (hl)
-    jr nz,_putchar_usb
-    jr _putchar_done
-_putchar_ra8875:
+    jr nz,@usb
+    jr @done
+@ra8875:
     ld a,b
     call ra8875_console_putchar
-    jr _putchar_done
-_putchar_usb:
+    jr @done
+@usb:
     ld a,b
     call usb_putchar
-_putchar_done:
+@done:
     ld a,b
     pop hl
     pop bc
@@ -85,13 +85,13 @@ _putchar_done:
 ; print a zero-terminated string pointed to by hl to the console
 con_puts:
     push hl
-_puts_loop:
+@loop:
     ld a,(hl)
     cp 0
-    jr z,_puts_end
+    jr z,@end
     call con_putchar
     inc hl
-    jp _puts_loop
-_puts_end:
+    jp @loop
+@end:
     pop hl
     ret

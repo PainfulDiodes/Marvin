@@ -2,11 +2,13 @@
 
 ## Coding
 
-"Callable" labels - i.e. addresses of functions which will end in a ret code - are in lowercase
+Labels come in three kinds:
 
-Other labels, including jump addresses and data labels are in uppercase
+- **Public** — no prefix, declared `PUBLIC`. Functions (addresses that end in a `ret`) are lowercase, e.g. `con_puts`; data labels and constants are uppercase, e.g. `WELCOME_MSG`
+- **Private** — `_` prefix, never `PUBLIC`: private helper functions (lowercase) and private data (uppercase), e.g. `_parse_filename`, `_MSG_NO_DRIVE`. A target's Marvin files assemble as one module, so a `_` label must be unique across the whole module: name it for its subsystem or parent function, e.g. `_file_write_scan_dir`, `_key_rowscan`
+- **Local** — `@` prefix: jump targets inside a function, scoped by z80asm to the previous ordinary label, e.g. `@loop`, `@exit`. They only need to be unique within their function, so they are short. The BBC BASIC layer uses them in uppercase, e.g. `@LOOP`
 
-Private labels - those which should not be referenced outside of their file are prefixed with an underscore
+Labels use full words, not abbreviations.
 
 ## Build / Structural Conventions
 

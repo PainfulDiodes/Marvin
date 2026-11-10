@@ -40,7 +40,8 @@
 ; * https://github.com/PainfulDiodes
 ; ****************************************************
 
-; MAIN PROGRAM LOOP
+; ENTRY POINTS
+; initialisation, then fall through into the main loop
 
 marvin_coldstart:
     ld hl,WELCOME_MSG
@@ -53,56 +54,59 @@ marvin_warmstart:
     ld sp, STACK
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
-_prompt:
+
+; MAIN PROGRAM LOOP
+; prompt, read a command line, dispatch it, repeat
+
+_monitor_loop:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
     IFDEF HAS_FLASH
     call bdfs_get_drive
-    jr nz, _prompt_no_drive
+    jr nz, @no_drive
     call con_putchar            ; drive letter
-_prompt_no_drive:
+@no_drive:
     ENDIF
     ld a,']'
     call con_putchar
-
-_get_cmd:
+@get_cmd:
     ; get character from console
     call con_getchar
     ; backspace? handle before echo (CHAR_BS or CHAR_DEL - Mac keyboard sends DEL)
     cp CHAR_BS
-    jr z,_get_cmd_bs
+    jr z,@bs
     cp CHAR_DEL
-    jr z,_get_cmd_bs
+    jr z,@bs
     ; echo the character to console
     call con_putchar
     ; is CR?
     cp CHAR_CR
     ; yes: skip this
-    jr z,_get_cmd
+    jr z,@get_cmd
     ; is tab?
     cp CHAR_TAB
     ; yes: skip this
-    jr z,_get_cmd
+    jr z,@get_cmd
     ; escape?
     cp CHAR_ESC
     ; yes
-    jr z, _get_cmd_esc
+    jr z, @esc
     ; end of line?
     cp CHAR_LF
     ; yes
-    jr z, _get_cmd_end       
+    jr z, @end       
     ; no: add character to the buffer
     ld(hl),a
     ; move pointer to next buffer location - we're not checking for overrun
     inc hl
     ; next character
-    jr _get_cmd
-_get_cmd_bs:
+    jr @get_cmd
+@bs:
     ; don't move pointer back if already at start of buffer
     ld bc,CMD_BUFFER
     or a                    ; clear carry flag
     sbc hl,bc               ; HL - CMD_BUFFER; sets Z if at start
-    jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
+    jr z,@bs_end            ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
     add hl,bc               ; restore HL
     ld a,CHAR_BS              ; BS: move cursor back
@@ -111,38 +115,49 @@ _get_cmd_bs:
     call con_putchar
     ld a,CHAR_BS              ; BS: reposition cursor
     call con_putchar
-    jr _get_cmd
-_get_cmd_bs_end:
+    jr @get_cmd
+@bs_end:
     add hl,bc               ; restore HL (= CMD_BUFFER)
-    jr _get_cmd
+    jr @get_cmd
     ; do escape
-_get_cmd_esc:
+@esc:
     ; new line
     ld a,CHAR_LF
     call con_putchar
     ; back to prompt
-    jr _prompt
-_get_cmd_end:
+    jr _monitor_loop
+@end:
     ; string terminator
     ld a,0
     ; add terminator to end of buffer
     ld(hl),a
     ld hl,CMD_BUFFER
     call mon_dispatch
-    jp _prompt
+    jp _monitor_loop
 
 ; process command from buffer
 ; HL = pointer to command string
+; out: Z = success, NZ = error
+;
+; Called from the main loop, and from BASIC's OSCLI for * commands.
+; It has no ret of its own on the command paths: it jumps (jp, not
+; call) to the command routine, and the command's ret returns
+; directly to mon_dispatch's caller. Each command therefore sets
+; Z/NZ itself before its ret. Exceptions (which don't leak stack):
+; - x hands control to the program: its ret returns to the caller,
+;   or it can jump to MARVIN_WARMSTART, which resets SP
+; - b/B enter BASIC, which sets its own SP (from HIMEM); BYE
+;   returns via marvin_warmstart, which resets SP
 mon_dispatch:
-_cmd_skip_space:
+@skip_space:
     ; load character from buffer
     ld a,(hl)
     ; skip leading spaces
     cp ' '
-    jr nz,_cmd_check
+    jr nz,@check
     inc hl
-    jr _cmd_skip_space
-_cmd_check:
+    jr @skip_space
+@check:
     ; end of string?
     cp 0
     ; yes - empty line - return to caller
@@ -184,7 +199,7 @@ _cmd_check:
     ret z
     cp '?'
     jp z,_cmd_help
-_cmd_bad:
+@bad:
     ld hl,BAD_CMD_MSG
     call con_puts
     ld a,' '
@@ -206,7 +221,7 @@ _cmd_read:
     ; end of string?
     cp 0
     ; yes: no address argument, so skip to read row
-    jr z, _cmd_read_row
+    jr z, @row
     ; parse first pair of characters
     call hex_byte_val
     ; load into upper byte of memory pointer
@@ -215,7 +230,7 @@ _cmd_read:
     call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
-_cmd_read_row:
+@row:
     ; initialise byte counter - each row will have this many bytes
     ld c, 0x10
     ; print DE content: the read address
@@ -229,7 +244,7 @@ _cmd_read_row:
     ld a,' '
     call con_putchar
     ; get a byte
-_cmd_read_byte:            
+@byte:            
     ld a,(de)
     ; and print it
     call con_putchar_hex
@@ -242,7 +257,7 @@ _cmd_read_byte:
     ; TODO djnz ?
     dec c
     ; repeat if the counter is not 0
-    jr nz, _cmd_read_byte
+    jr nz, @byte
     ; otherwise, new line
     ld a,CHAR_LF
     call con_putchar
@@ -258,7 +273,7 @@ _cmd_write:
     ; end of string?
     cp 0
     ; yes: no data
-    jr z, _cmd_write_null
+    jr z, @null
     ; parse first pair of characters - address high
     call hex_byte_val
     ; load into upper byte of memory pointer
@@ -267,25 +282,25 @@ _cmd_write:
     call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
-_cmd_write_data:
+@data:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: we're done
-    jr z, _cmd_write_end
+    jr z, @end
     ; parse data byte
     call hex_byte_val
     ; write byte to memory
     ld (de),a
     ; advance destination pointer
     inc de
-    jr _cmd_write_data
-_cmd_write_end:
+    jr @data
+@end:
     cp a                ; Z = success
     ret
     ; w with no data
-_cmd_write_null:
+@null:
     ld hl,CMD_W_NULL_MSG
     call con_puts
     cp a                ; Z = success
@@ -300,7 +315,7 @@ _cmd_execute:
     ; end of string?
     cp 0
     ; yes - no data
-    jp z, _cmd_exec_df
+    jp z, @exec_df
     ; parse first pair of characters - address high
     call hex_byte_val
     ; load into upper byte of memory pointer
@@ -313,7 +328,7 @@ _cmd_execute:
     ; execute from address
     jp (hl)
     ; start executing from default address
-_cmd_exec_df:
+@exec_df:
     ld hl,RAMSTART
     ; execute from address
     jp (hl)
@@ -327,12 +342,12 @@ _cmd_load:
     ; end of string?
     cp 0
     ; yes: no data - quit
-    jp z, _cmd_load_end
+    jp z, @end
     ; parse first pair of characters - byte count
     call hex_byte_val
     cp 0 
     ; yes - zero byte count - quit 
-    jp z, _cmd_load_end
+    jp z, @end
     ; load byte count into C
     ld c,a
     ; parse address high
@@ -348,14 +363,14 @@ _cmd_load:
     ; record type zero?
     cp 0
     ; no: quit 
-    jp nz, _cmd_load_end
-_cmd_load_data:
+    jp nz, @end
+@data:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: we're done
-    jr z, _cmd_load_end
+    jr z, @end
     ; no:
     ; parse data byte
     call hex_byte_val
@@ -367,8 +382,8 @@ _cmd_load_data:
     ; TODO djnz
     dec c
     ; if byte counter not zero then go again
-    jr nz,_cmd_load_data
-_cmd_load_end:
+    jr nz,@data
+@end:
     cp a                ; Z = success
     ret
 

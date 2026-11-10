@@ -26,9 +26,9 @@ spi_read:
 ; destroys: AF
 spi_byte:
     out (SPI_DATA), a
-_spi_byte_wait:
+@wait:
     in a, (SPI_CTRL)
     bit 0, a
-    jr z, _spi_byte_wait        ; bit 0 low = serialising
+    jr z, @wait                 ; bit 0 low = serialising
     in a, (SPI_DATA)
     ret

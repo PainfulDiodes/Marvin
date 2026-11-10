@@ -38,19 +38,19 @@ spi_read:
 ; destroys: AF, B, D
 spi_byte:
     ld b, 8
-_spi_byte_loop:
+@loop:
     rlca
     ld d, a
     ld a, GPO_LOW_STATE
-    jr nc, _spi_byte_bit
+    jr nc, @bit
     ld a, GPO_HIGH_STATE
-_spi_byte_bit:
+@bit:
     out (GPIO_OUT), a           ; set MOSI
     or 1 << GPO_BIT_SCK
     out (GPIO_OUT), a           ; clock high - TODO: sample GPIO_IN here for MISO
     and ~(1 << GPO_BIT_SCK)
     out (GPIO_OUT), a           ; clock low
     ld a, d
-    djnz _spi_byte_loop
+    djnz @loop
     xor a                       ; TODO: replace with accumulated received byte
     ret

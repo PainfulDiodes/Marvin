@@ -80,37 +80,37 @@ IFDEF INCLUDE_BASIC
 ELSE
     ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
 ENDIF
-_boot_powerup:
+@powerup:
     nop
     dec bc
     ld a,b
     or c
-    jr nz,_boot_powerup
+    jr nz,@powerup
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
 IFDEF INCLUDE_BASIC
     ld b,3                      ; up to 3 init attempts
-_boot_ra8875_init:
+@ra8875_init:
     call ra8875_initialise      ; ra8875_initialise preserves BC
-    jr z,_boot_ra8875_ok        ; success
-    djnz _boot_ra8875_init      ; failed: retry (each attempt re-asserts RESET)
-    jr _boot_ra8875_failed      ; all attempts failed: fall back to USB console
-_boot_ra8875_ok:
+    jr z,@ra8875_ok             ; success
+    djnz @ra8875_init           ; failed: retry (each attempt re-asserts RESET)
+    jr @ra8875_failed           ; all attempts failed: fall back to USB console
+@ra8875_ok:
 ELSE
     call ra8875_initialise
     ld bc,0x8000                ; post-init settling delay (~100ms at 10MHz)
-_boot_settle:
+@settle:
     nop
     dec bc
     ld a,b
     or c
-    jr nz,_boot_settle
+    jr nz,@settle
 ENDIF
     call ra8875_console_init
     call console_select
     jp marvin_coldstart
 IFDEF INCLUDE_BASIC
-_boot_ra8875_failed:
+@ra8875_failed:
     ; RA8875 initialisation failed (no SPI response or memory-clear timeout).
     ; Fall back to USB console so the monitor is at least reachable.
     ;
