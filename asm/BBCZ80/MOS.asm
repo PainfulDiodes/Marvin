@@ -49,7 +49,7 @@
     EXTERN CMD_BUFFER       ; monitor - command buffer
     EXTERN SYSTEM_RAMSTART  ; system - start of Marvin system RAM
 ;
-IFDEF INCLUDE_BDFS
+IFDEF HAS_FLASH
     INCLUDE "asm/bdfs/bdfs.inc"
     EXTERN bdfs_select_drive
     EXTERN bdfs_set_drive
@@ -336,7 +336,7 @@ OSCALL:
 ;   Destroys: A,B,C,D,E,H,L,F
 ;
 OSSAVE:
-IFDEF INCLUDE_BDFS
+IFDEF HAS_FLASH
     push de                     ; save source (_normalise_filename destroys DE)
     call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore source (does not affect flags)
@@ -365,7 +365,7 @@ ENDIF
 ;   Destroys: A,B,C,D,E,H,L,F
 ;
 OSLOAD:
-IFDEF INCLUDE_BDFS
+IFDEF HAS_FLASH
     push de                     ; save dest (_normalise_filename destroys DE)
     call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore dest
@@ -485,7 +485,7 @@ _INKEY:
 INILEN  EQU $-_FLAGS
 ;
 ;
-IFDEF INCLUDE_BDFS
+IFDEF HAS_FLASH
 ; ---- BDFS filename normalisation and error bridge ----
 ;
 ; _normalise_filename: normalise a BBC BASIC filename in ACCS
