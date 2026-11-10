@@ -2,54 +2,21 @@
 ; All labels are PUBLIC so they can be referenced via EXTERN from other modules.
 
     PUBLIC RAMSTART
-    PUBLIC CONSOLE_STATUS, LCD_RAMSTART, KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, CMD_BUFFER, STACK
+    PUBLIC STACK
     PUBLIC UM245R_CTRL, UM245R_DATA
     PUBLIC KEYSCAN_OUT, KEYSCAN_IN
     PUBLIC LCD_CTRL, LCD_DATA
     PUBLIC GPIO_OUT, GPIO_IN
     PUBLIC SPI_CTRL, SPI_DATA
     PUBLIC SPI_CS_IDLE, SPI_CS_RESET, SPI_CS_SLOT0, SPI_CS_SLOT1, SPI_CS_SLOT2, SPI_CS_SLOT3, SPI_CS_SLOT4, SPI_CS_SLOT5, SPI_CS_SLOT6
-    PUBLIC RA8875_RAMSTART
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
-    PUBLIC W25Q_RAMSTART
-    PUBLIC BDFS_RAMSTART
-
-IFDEF HAS_RA8875
-    EXTERN RA8875_RAMSIZE
-ELSE
-RA8875_RAMSIZE      equ 0
-ENDIF
-
-; TODO we need to reconsider the RAM allocation here - its getting messy and there's a mix of conditional / unconditional allocations
-
-IFDEF HAS_LCD
-    EXTERN LCD_RAMSIZE
-ELSE
-LCD_RAMSIZE         equ 0
-ENDIF
-
-IFDEF HAS_FLASH
-    EXTERN W25Q_RAMSIZE
-    EXTERN BDFS_RAMSIZE
-ELSE
-W25Q_RAMSIZE        equ 0
-BDFS_RAMSIZE        equ 0
-ENDIF
 
 ; start of user RAM
 RAMSTART            equ 0x8000
 
-; system RAM
+; system RAM: the linker allocates it from here, in the RAM section at the end of each target's marvin.asm
 SYSTEM_RAMSTART     equ 0xf000
-RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console variables (RA8875_RAMSIZE bytes)
-CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
-LCD_RAMSTART        equ CONSOLE_STATUS + 1                  ; LCD console variables (LCD_RAMSIZE bytes)
-W25Q_RAMSTART       equ LCD_RAMSTART + LCD_RAMSIZE          ; W25Q driver variables (W25Q_RAMSIZE bytes, layout in w25q.asm)
-BDFS_RAMSTART       equ W25Q_RAMSTART + W25Q_RAMSIZE        ; BDFS variables (BDFS_RAMSIZE bytes, layout in bdfs.asm)
-KEY_MATRIX_BUFFER   equ BDFS_RAMSTART + BDFS_RAMSIZE        ; 8 bytes: keyscan buffer
-CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
-CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
 
 ; stack starts at top of RAM (CPU decrements SP before PUSH)
 STACK               equ 0xffff

@@ -1,6 +1,8 @@
     INCLUDE "asm/core/chars.inc"
 
-    EXTERN KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, KEYSCAN_OUT, KEYSCAN_IN
+    EXTERN KEYSCAN_OUT, KEYSCAN_IN
+
+    ; RAM variables: keymatrix_ram.asm
 
     PUBLIC key_readchar
     PUBLIC key_modifiers

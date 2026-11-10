@@ -52,10 +52,6 @@ BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
     PUBLIC bdfs_file_delete
     PUBLIC bdfs_set_drive
     PUBLIC bdfs_get_drive
-    PUBLIC BDFS_RAMSIZE
-    PUBLIC BDFS_DRIVE
-    PUBLIC BDFS_HDR_BUF
-    PUBLIC BDFS_ENT_BUF
     PUBLIC BDFS_SECTOR_SIZE
 
     EXTERN flash_select_slot
@@ -66,7 +62,6 @@ BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
     EXTERN flash_bytes_to_sectors
     EXTERN flash_sector_to_addr
     EXTERN flash_read
-    EXTERN BDFS_RAMSTART
     EXTERN W25Q_SECTOR_SIZE     ; hardware geometry — erase unit
     EXTERN W25Q_PAGE_SIZE       ; hardware geometry — write unit
 
@@ -75,36 +70,7 @@ BDFS_SECTOR_SIZE EQU W25Q_SECTOR_SIZE
 _PAGE_SIZE      EQU W25Q_PAGE_SIZE
 _MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupies one slot
 
-; ---- RAM layout (private to this module) ------------------------------------
-
-; directory header r/w buffer
-BDFS_HDR_BUF            EQU BDFS_RAMSTART
-; entry scan buffer
-BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE
-; 11-byte search key (8 name + 3 ext)
-BDFS_SRCH_BUF           EQU BDFS_ENT_BUF + BDFS_ENT_SIZE
-_SRCH_BUF_LEN           EQU 11
-; directory iterator scan offset (2 bytes)
-_DIR_SCAN_OFST          EQU BDFS_SRCH_BUF + _SRCH_BUF_LEN
-_DIR_SCAN_OFST_LEN      EQU 2
-; active entry count (1 byte)
-_ACTIVE_COUNT           EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN
-_ACTIVE_COUNT_LEN       EQU 1
-; active drive letter ('A'-'F', 0=none)
-BDFS_DRIVE              EQU _ACTIVE_COUNT + _ACTIVE_COUNT_LEN
-_DRIVE_LEN              EQU 1
-; first free dir entry byte offset from scan (2 bytes)
-_FREE_ENTRY_OFFSET      EQU BDFS_DRIVE + _DRIVE_LEN
-_FREE_ENTRY_OFFSET_LEN  EQU 2
-; next free sector number from scan (2 bytes)
-_NEXT_FREE_SECTOR       EQU _FREE_ENTRY_OFFSET + _FREE_ENTRY_OFFSET_LEN
-_NEXT_FREE_SECTOR_LEN   EQU 2
-; addr[23:16] during page writes (1 byte)
-_PAGE_ADDR_BANK         EQU _NEXT_FREE_SECTOR + _NEXT_FREE_SECTOR_LEN
-_PAGE_ADDR_BANK_LEN     EQU 1
-; declared here so that this can be allocated in the monitor
-BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _SRCH_BUF_LEN + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
-
+; ---- RAM variables: bdfs_ram.asm ----
 
 ; bdfs_init: called once at cold start
 ; Sets BDFS_DRIVE to the lowest drive letter ('A'-'F') with a device present,
@@ -401,8 +367,8 @@ bdfs_file_write:
 @size_ok:
     push bc                             ; preserve length for caller
     push de                             ; preserve source addr for caller
-    ld ix, BDFS_SRCH_BUF
-    call _parse_filename                ; fills BDFS_SRCH_BUF[0:10]; preserves BC, DE, HL
+    ld ix, _SRCH_BUF
+    call _parse_filename                ; fills _SRCH_BUF[0:10]; preserves BC, DE, HL
     push hl                             ; filename
     call _file_write_data               ; BC=length, DE=source; preserves BC
     jr nz, @data_fail
@@ -493,7 +459,7 @@ _file_write_scan_dir:
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
     jr z, @next                         ; deleted (bit 0 = 0): skip duplicate check
-    call _compare_name_fields            ; Z=match (BDFS_ENT_BUF vs BDFS_SRCH_BUF)
+    call _compare_name_fields            ; Z=match (BDFS_ENT_BUF vs _SRCH_BUF)
     jr z, @duplicate
 @next:
     ld de, BDFS_ENT_SIZE
@@ -821,7 +787,7 @@ _parse_filename:
     pop af
     ret
 
-; _compare_name_fields: 11-byte memcmp of BDFS_ENT_BUF[0:10] vs BDFS_SRCH_BUF[0:10]
+; _compare_name_fields: 11-byte memcmp of BDFS_ENT_BUF[0:10] vs _SRCH_BUF[0:10]
 ; out: Z=match, NZ=no match
 ; destroys: AF
 _compare_name_fields:
@@ -829,7 +795,7 @@ _compare_name_fields:
     push de
     push hl
     ld de, BDFS_ENT_BUF
-    ld hl, BDFS_SRCH_BUF
+    ld hl, _SRCH_BUF
     ld b, BDFS_NAME_LEN + BDFS_EXT_LEN     ; 11 bytes
 @loop:
     ld a, (de)
@@ -893,8 +859,8 @@ _find_file_entry:
     push hl
     call _verify_drive_formatted
     jr nz, @exit                          ; A = BDFS_ERR_NOT_FORMATTED, NZ
-    ld ix, BDFS_SRCH_BUF
-    call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]
+    ld ix, _SRCH_BUF
+    call _parse_filename                  ; fills _SRCH_BUF[0:10]
     ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
     ld b, 0                               ; entry counter
 @loop:

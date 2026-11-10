@@ -16,7 +16,7 @@
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
     EXTERN console_select       ; console_select.asm - console selection
-    EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB ; system.asm - force USB fallback
+    EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB ; console_select - force USB fallback
     EXTERN ra8875_initialise    ; ra8875.asm - display init
     EXTERN ra8875_console_init  ; console.asm (ra8875-z80-repo) - console state init
 IFDEF INCLUDE_BASIC

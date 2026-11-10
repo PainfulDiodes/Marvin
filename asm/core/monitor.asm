@@ -1,6 +1,8 @@
     INCLUDE "asm/core/chars.inc"
 
-    EXTERN CMD_BUFFER, RAMSTART
+    EXTERN RAMSTART
+
+    ; RAM variables: monitor_ram.asm
     EXTERN STACK
 
     PUBLIC marvin_coldstart

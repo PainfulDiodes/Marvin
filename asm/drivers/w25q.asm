@@ -39,7 +39,6 @@ W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
 ; W25Q_CAP_256MBIT EQU 0x19  ; W25Q256 - 32 MByte - not supported: requires 4-byte addressing above 16MB
 
     EXTERN SPI_CTRL, SPI_CS_IDLE            ; system.asm - BeanBoardSPI port addresses
-    EXTERN W25Q_RAMSTART                    ; system.asm - base address of W25Q RAM block
     EXTERN spi_byte                         ; spi_beanboardspi_rev*.asm - SPI byte transfer
 
     PUBLIC flash_read
@@ -56,19 +55,13 @@ W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
     PUBLIC flash_sector_to_addr
     PUBLIC W25Q_SECTOR_SIZE
     PUBLIC W25Q_PAGE_SIZE
-    PUBLIC W25Q_RAMSIZE
     PUBLIC W25Q80_NAME
     PUBLIC W25Q16_NAME
     PUBLIC W25Q32_NAME
     PUBLIC W25Q64_NAME
     PUBLIC W25Q128_NAME
 
-; RAM layout
-W25Q_CS             equ W25Q_RAMSTART + 0   ; 1 byte: active CS byte for flash_cs_assert
-W25Q_ID_MFR         equ W25Q_RAMSTART + 1   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
-W25Q_ID_TYPE        equ W25Q_RAMSTART + 2   ; 1 byte: JEDEC memory type
-W25Q_ID_CAP         equ W25Q_RAMSTART + 3   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
-W25Q_RAMSIZE        equ 4
+; RAM variables: w25q_ram.asm
 
 ; flash_has_device: check whether a W25Q device was detected when the slot was last selected
 ; in:  — (uses W25Q_ID_MFR cached by flash_select_slot)

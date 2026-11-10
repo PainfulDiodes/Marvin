@@ -1,6 +1,8 @@
     PUBLIC console_select
 
-    EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
+    EXTERN CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
+
+    ; RAM variables: console_select_ram.asm
 
     EXTERN key_modifiers
     EXTERN MOD_KEY_SHIFT

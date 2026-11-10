@@ -1,17 +1,13 @@
     INCLUDE "asm/drivers/hd44780.inc"
 
     EXTERN LCD_CTRL, LCD_DATA
-    EXTERN LCD_RAMSTART
     INCLUDE "asm/core/chars.inc"
 
     PUBLIC lcd_init
     PUBLIC lcd_putchar
     PUBLIC lcd_puts
-    PUBLIC LCD_RAMSIZE
 
-    ; RAM variables
-    LCD_CURSOR_COL  equ LCD_RAMSTART + 0    ; 1 byte: column (0..LCD_LINE_LEN-1)
-    LCD_RAMSIZE     equ 1
+    ; RAM variables: hd44780_ram.asm
 
 ; initialise LCD
 lcd_init:
