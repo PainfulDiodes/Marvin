@@ -3,7 +3,8 @@
 
     INCLUDE "asm/targets/beanboard/config.inc"
 
-    INCLUDE "asm/targets/beanboard/entry.asm"
+    INCLUDE "asm/core/entry.asm"
+    INCLUDE "asm/targets/beanboard/boot.asm"
 IFDEF INCLUDE_BASIC
     INCLUDE "asm/BBCZ80/ENTRY.asm"
 ENDIF

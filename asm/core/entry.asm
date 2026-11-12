@@ -1,8 +1,15 @@
-; trampoline.asm - Marvin trampoline functions (ABI)
+; entry.asm - Entry points (all targets)
 ;
-; A table of jp instructions at fixed ROM addresses from 0x0040, one 3-byte entry per
-; service. Addresses must match abi/marvin.inc. Included by each target's entry.asm,
-; after the RST vectors.
+; Every fixed-address entry point into the ROM, shared by all targets, with or without
+; BBC BASIC (INCLUDE_BASIC). Included first by each target's marvin.asm, followed by
+; the target's boot.asm, which provides _boot.
+;
+;   0x0000          CPU reset: set SP, then the target's _boot
+;   0x0008-0x0038   RST vectors, all redirect to 0x0000 (hardware reset)
+;   0x0040-         Marvin trampoline functions (ABI)
+;
+; The ABI is a table of jp instructions at fixed ROM addresses from 0x0040, one 3-byte
+; entry per service. Addresses must match abi/marvin.inc.
 ;
 ; Each entry jumps to the real function when the target's config.inc declares the
 ; hardware, and to _stub (returns immediately) when it doesn't:
@@ -11,7 +18,13 @@
 ;   HAS_RA8875   - RA8875 TFT display
 ;   HAS_FLASH    - W25Q flash cartridges, with BDFS
 ;
+    EXTERN STACK
     EXTERN marvin_warmstart     ; monitor.asm - warm start
+IFDEF INCLUDE_BASIC
+    EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
+ELSE
+    PUBLIC START                ; stub below - no BBC BASIC in this build
+ENDIF
     EXTERN con_putchar          ; console - write character
     EXTERN con_putchar_hex      ; string.asm - print hex byte
     EXTERN con_puts             ; console - print string
@@ -69,6 +82,36 @@ IFDEF HAS_FLASH
     EXTERN bdfs_file_read       ; bdfs.asm - read file from current drive into RAM
     EXTERN bdfs_file_delete     ; bdfs.asm - soft-delete file on current drive
 ENDIF
+;
+;
+; ---- CPU Reset ----
+;
+    ORG 0x0000
+    ld sp, STACK
+    jp _boot                    ; target's boot.asm
+;
+;
+; ---- RST Vectors ----
+;
+; All RST instructions redirect to 0x0000 (hardware reset)
+;
+ALIGN 0x0008
+    jp 0x0000     ; RST 08H
+ALIGN 0x0010
+    jp 0x0000     ; RST 10H
+ALIGN 0x0018
+    jp 0x0000     ; RST 18H
+ALIGN 0x0020
+    jp 0x0000     ; RST 20H
+ALIGN 0x0028
+    jp 0x0000     ; RST 28H
+ALIGN 0x0030
+    jp 0x0000     ; RST 30H
+ALIGN 0x0038
+    jp 0x0000     ; RST 38H / IM 1 vector
+;
+;
+; ---- Trampoline Functions (ABI) ----
 ;
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
@@ -174,3 +217,10 @@ ENDIF
     jp hex_byte_val      ; 0x00D3 - parse hex byte (in: HL=str out: A=byte HL=advanced)
 _stub:
     ret
+;
+; The monitor's b command jumps to START: BBC BASIC when it is in the build, otherwise
+; back to the monitor
+IFNDEF INCLUDE_BASIC
+START:
+    jp marvin_warmstart
+ENDIF

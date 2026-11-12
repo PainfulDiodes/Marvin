@@ -21,6 +21,7 @@ Console
 
 * The console selection is kept over a reset (a magic number in RAM tells a reset from a power-up): Shift-Reset selects USB, Ctrl-Reset the keyboard and display, and a plain reset keeps the previous console. After power-up it is the keyboard and display, as before
 * `key_modifiers` (ABI `0x0067`) also reports Ctrl (`MOD_KEY_CONTROL`)
+* beandeck monitor-only builds now boot the same way as the BASIC builds: a shorter power-up delay, up to 3 RA8875 init attempts, and the USB console if they all fail
 
 Build
 
@@ -29,6 +30,7 @@ Build
 Source
 
 * Label naming made consistent: jump targets inside a function are now z80asm `@` local labels (e.g. `@loop`), leaving `_` labels for private helpers and data, consistently named so they are unique across the target's module; see `CONVENTIONS.md`. No change to the binaries
+* Reset and RST vectors and the trampoline table are now one shared file, `asm/core/entry.asm` (replacing `asm/core/trampoline.asm`); each target keeps only its boot sequence, in `asm/targets/<target>/boot.asm`
 
 ## 1.4
 

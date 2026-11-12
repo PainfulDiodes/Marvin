@@ -57,7 +57,8 @@ minipro -u -s -p AT28C64B -w build/beanzee_minimal.bin
 - `manifests/basic.lst` — the BBC BASIC modules, shared by every BASIC build. Including it also sets `-DINCLUDE_BASIC`, which is what makes a build a BASIC build
 - `asm/targets/<target>/marvin.asm` — all of Marvin's own code for a target, as one module: it `INCLUDE`s the target's `config.inc` and every Marvin source file the target uses, in order
 - `asm/targets/<target>/config.inc` — the hardware the target has, as `DEFC` flags: `HAS_LCD`, `HAS_KEYBOARD`, `HAS_RA8875`, `HAS_FLASH`
-- `asm/targets/<target>/entry.asm` — reset and RST vectors, the trampoline table (from `asm/core/trampoline.asm`) and the boot sequence
+- `asm/core/entry.asm` — every fixed entry point into the ROM, shared by every target: the reset and RST vectors, and the ABI trampoline table at `0x0040` (addresses as in `abi/marvin.inc`)
+- `asm/targets/<target>/boot.asm` — the target's boot sequence, `_boot`, entered from the reset vector
 - `asm/targets/<target>/mos.asm` — wrapper that assembles the shared `asm/BBCZ80/MOS.asm` with the target's flags (BASIC builds only)
 
 For example, `manifests/beandeck.lst`:

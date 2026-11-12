@@ -3,7 +3,8 @@
 
     INCLUDE "asm/targets/beandeck_reva/config.inc"
 
-    INCLUDE "asm/targets/beandeck/entry.asm"
+    INCLUDE "asm/core/entry.asm"
+    INCLUDE "asm/targets/beandeck/boot.asm"
 IFDEF INCLUDE_BASIC
     INCLUDE "asm/BBCZ80/ENTRY.asm"
 ENDIF
