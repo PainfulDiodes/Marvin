@@ -15,7 +15,7 @@
 set -e
 
 # The welcome message includes the version
-echo "defm \"$(cat VERSION.txt)\"" > asm/core/version.inc
+echo "defm \"$(cat docs/VERSION.txt)\"" > asm/core/version.inc
 
 # BBC BASIC sources are generated from the upstream sources
 if [ ! -f BBCZ80-repo/src/MAIN.asm ]; then

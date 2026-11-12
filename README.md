@@ -1,6 +1,6 @@
 # Marvin 1.5
 
-Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), with submodule extensions.
+Firmware for the BeanZee Z80 family: a simple [monitor program](docs/monitor.md), with submodule extensions.
 
 ## Hardware Targets
 
@@ -107,7 +107,7 @@ message: DEFM "Hello!\n", 0
 
 ## Monitor Commands
 
-See: [monitor](./monitor.md)
+See: [monitor](docs/monitor.md)
 
 ## BBC BASIC
 
@@ -121,6 +121,12 @@ From BASIC you can access BDFS with `SAVE "name.ext"` and `LOAD "name.ext"`. If 
 Return to the monitor with:
 
 - QUIT
+
+## Documentation
+
+- [Monitor commands](docs/monitor.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Conventions](docs/CONVENTIONS.md) — coding and build/structural conventions
 
 ## Links
 

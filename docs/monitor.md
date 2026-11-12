@@ -6,7 +6,7 @@ BeanZee is a board for experimentation and learning. The primary function of Mar
 Example programs to run on BeanZee are provided in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes)
 
 ## Building Marvin
-See the main [readme](./README.md)
+See the main [readme](../README.md)
 
 ## Marvin and BeanZee
 
